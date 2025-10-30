@@ -1,0 +1,191 @@
+using System;
+using System.Collections.Generic;
+using System.Data.SQLite;
+
+class Program
+{
+    private static string connectionString = "Data Source=Myata.db;Version=3;";
+
+    static void Main()
+    {
+        Console.WriteLine("SQLite Veri Yönetim Programına Hoş Geldiniz!");
+
+        while (true)
+        {
+            Console.WriteLine("\nMevcut tabloları görüntülemek için '1', çıkış için '5' yazın.");
+            Console.Write("Seçiminizi yapın: ");
+            string choice = Console.ReadLine();
+
+            if (choice == "1")
+            {
+                ListTables();
+                Console.Write("\nİşlem yapmak istediğiniz tabloyu seçin: ");
+                string tableName = Console.ReadLine();
+
+                Console.WriteLine("\nSeçtiğiniz tablo üzerinde ne yapmak istersiniz?");
+                Console.WriteLine("1. Verileri listele");
+                Console.WriteLine("2. Veri ekle");
+                Console.WriteLine("3. Veri güncelle");
+                Console.WriteLine("4. Veri sil");
+                Console.WriteLine("5. Geri dön");
+
+                Console.Write("\nSeçiminizi yapın: ");
+                string tableChoice = Console.ReadLine();
+
+                switch (tableChoice)
+                {
+                    case "1":
+                        ListData(tableName);
+                        break;
+                    case "2":
+                        InsertData(tableName);
+                        break;
+                    case "3":
+                        UpdateData(tableName);
+                        break;
+                    case "4":
+                        DeleteData(tableName);
+                        break;
+                    case "5":
+                        continue;
+                    default:
+                        Console.WriteLine("Geçersiz seçim, lütfen tekrar deneyin.");
+                        break;
+                }
+            }
+            else if (choice == "5")
+            {
+                Console.WriteLine("Programdan çıkılıyor...");
+                break;
+            }
+            else
+            {
+                Console.WriteLine("Geçersiz seçim, lütfen tekrar deneyin.");
+            }
+        }
+    }
+
+    static void ListTables()
+    {
+        try
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT name FROM sqlite_master WHERE type='table'";
+                SQLiteCommand command = new SQLiteCommand(sql, connection);
+
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    Console.WriteLine("\nMevcut Tablolar:");
+                    while (reader.Read())
+                    {
+                        Console.WriteLine(reader["name"].ToString());
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    static void ListData(string tableName)
+    {
+        try
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                string sql = $"SELECT * FROM {tableName}";
+                SQLiteCommand command = new SQLiteCommand(sql, connection);
+
+                using (SQLiteDataReader reader = command.ExecuteReader())
+                {
+                    Console.WriteLine("\nVeriler:");
+                    while (reader.Read())
+                    {
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            Console.Write(reader[i] + "\t");
+                        }
+                        Console.WriteLine();
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    static void InsertData(string tableName)
+    {
+        Console.Write("Yeni veri girin (örneğin, 'değer1, değer2, ...'): ");
+        string inputData = Console.ReadLine();
+
+        try
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                string sql = $"INSERT INTO {tableName} VALUES ({inputData})"; // Değerleri buraya yazın
+                SQLiteCommand command = new SQLiteCommand(sql, connection);
+                int rowsAffected = command.ExecuteNonQuery();
+                Console.WriteLine($"{rowsAffected} satır eklendi.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    static void UpdateData(string tableName)
+    {
+        Console.Write("Güncellenecek verinin ID'sini girin: ");
+        string id = Console.ReadLine();
+        Console.Write("Yeni veriyi girin (örneğin, 'kolon1 = yeniDeğer1, kolon2 = yeniDeğer2'): ");
+        string updatedData = Console.ReadLine();
+
+        try
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                string sql = $"UPDATE {tableName} SET {updatedData} WHERE id = {id}";
+                SQLiteCommand command = new SQLiteCommand(sql, connection);
+                int rowsAffected = command.ExecuteNonQuery();
+                Console.WriteLine($"{rowsAffected} satır güncellendi.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Bir hata oluştu: " + ex.Message);
+        }
+    }
+
+    static void DeleteData(string tableName)
+    {
+        Console.Write("Silinecek verinin ID'sini girin: ");
+        string id = Console.ReadLine();
+
+        try
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                string sql = $"DELETE FROM {tableName} WHERE id = {id}";
+                SQLiteCommand command = new SQLiteCommand(sql, connection);
+                int rowsAffected = command.ExecuteNonQuery();
+                Console.WriteLine($"{rowsAffected} satır silindi.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Bir hata oluştu: " + ex.Message);
+        }
+    }
+}
